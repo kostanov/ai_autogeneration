@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ product_name }}</title>
+  <style>
+    @page { size: 400px 560px; margin: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "DejaVu Sans", sans-serif;
+      width: 400px;
+      height: 560px;
+    }
+    .card {
+      position: relative;
+      width: 400px;
+      height: 560px;
+      overflow: hidden;
+      border-radius: 12px;
+    }
+    .card-bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .card-bg-placeholder {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(160deg, #e2e8f0 0%, #94a3b8 100%);
+    }
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to top,
+        rgba(15, 23, 42, 0.45) 0%,
+        transparent 45%
+      );
+    }
+    .content {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 18px 16px 20px;
+      color: #f8fafc;
+      background: #0f172a;
+      border-top: 3px solid #7c3aed;
+    }
+    .price {
+      font-size: 28pt;
+      font-weight: 700;
+      line-height: 1.1;
+      margin-bottom: 6px;
+      letter-spacing: -0.02em;
+      color: #ffffff;
+    }
+    .name {
+      font-size: 14pt;
+      font-weight: 600;
+      line-height: 1.25;
+      margin-bottom: 10px;
+      color: #f1f5f9;
+    }
+    .description {
+      font-size: 9.5pt;
+      line-height: 1.45;
+      color: #cbd5e1;
+    }
+    .badge {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      background: #7c3aed;
+      color: #fff;
+      font-size: 8pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 5px 10px;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    {% if image_uri %}
+    <img class="card-bg" src="{{ image_uri }}" alt="">
+    {% else %}
+    <div class="card-bg-placeholder"></div>
+    {% endif %}
+    <div class="overlay"></div>
+    <span class="badge">Маркетплейс</span>
+    <div class="content">
+      <div class="price">{{ price }}</div>
+      <div class="name">{{ product_name }}</div>
+      <div class="description">{{ description }}</div>
+    </div>
+  </div>
+</body>
+</html>

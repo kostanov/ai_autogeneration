@@ -9,7 +9,8 @@
 ├── api.py               # опциональный Flask API
 ├── templates/
 │   ├── report_template.html
-│   └── design_report_template.html
+│   ├── design_report_template.html
+│   └── product_card_template.html
 ├── reports/             # готовые PDF и images/
 ├── utils/
 │   ├── ai_processor.py
@@ -43,14 +44,15 @@ just run -- -f samples/dialog_example.txt
 # отчёт по заказу дизайна с генерацией макета (design)
 just run -- -t design -q medium -f samples/design_dialog_example.txt
 
-# демо без API
-just demo
-just demo-design
+# карточка товара для маркетплейса (product)
+just run -- -t product --name "Наушники TWS Pro X" --price "4 990 ₽" -q medium
+just demo-product
 
 # HTTP API
 just api
 # POST /api/report?type=client  {"transcript": "..."}
 # POST /api/report?type=design&quality=high  {"transcript": "..."}
+# POST /api/report?type=product&quality=medium  {"name": "...", "price": "..."}
 ```
 
 ## Команды
@@ -58,10 +60,9 @@ just api
 | Команда | Описание |
 |---------|----------|
 | `just` | список команд |
-| `just run` | генерация отчёта (`-t client` / `-t design`, `-q` для качества картинки) |
-| `just demo` | демо-отчёт по диалогу |
-| `just demo-design` | демо-отчёт по дизайну (без картинки) |
-| `just sample-design` | полный отчёт design с API |
+| `just run` | генерация (`-t client` / `design` / `product`, `-q` для картинки) |
+| `just demo-product` | демо карточки товара (без API) |
+| `just product` | карточка с API: `just product "Название" "1 990 ₽"` |
 | `just api` | Flask API |
 | `just lint` | проверка ruff |
 | `just fix` | автоисправление |

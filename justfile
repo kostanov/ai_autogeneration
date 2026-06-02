@@ -21,6 +21,9 @@ text:
 image quality="medium":
     uv run main.py -t design -q {{quality}} -f samples/design_dialog_example.txt
 
+product:
+    uv run main.py -t product --name "Наушники TWS Pro X" --price "4 990 ₽"
+
 api:
     uv run python api.py
 

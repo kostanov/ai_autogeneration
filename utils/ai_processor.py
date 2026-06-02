@@ -48,6 +48,23 @@ DESIGN_REPORT_SCHEMA = {
     "additionalProperties": False,
 }
 
+PRODUCT_CARD_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "description": {"type": "string"},
+        "image_prompt": {"type": "string"},
+    },
+    "required": ["description", "image_prompt"],
+    "additionalProperties": False,
+}
+
+PRODUCT_CARD_SYSTEM_PROMPT = """Ты создаёшь контент для карточки товара на маркетплейсе.
+По названию и цене товара сформируй:
+- description: продающее описание на русском (2–4 предложения, без цены в тексте)
+- image_prompt: промпт на английском для фонового изображения товара
+  (фотореалистичный продукт на чистом или мягком градиентном фоне, без текста и надписей)
+Отвечай только валидным JSON по заданной схеме."""
+
 DESIGN_SYSTEM_PROMPT = """Ты анализируешь транскрибации заказов на дизайн сайта.
 Извлеки данные для отчёта:
 - client_name: имя клиента
@@ -81,6 +98,21 @@ def _create_client() -> OpenAI:
     if base_url:
         kwargs["base_url"] = base_url.rstrip("/")
     return OpenAI(**kwargs)
+
+
+def process_product_mock(name: str, price: str) -> dict[str, str]:
+    return {
+        "product_name": name,
+        "price": price,
+        "description": (
+            "Беспроводные наушники с активным шумоподавлением и до 30 часов "
+            "автономной работы. Комфортная посадка, быстрая зарядка USB-C."
+        ),
+        "image_prompt": (
+            "Professional product photo of wireless over-ear headphones, "
+            "matte black, soft gradient background, studio lighting, no text"
+        ),
+    }
 
 
 def process_design_mock(_text: str) -> dict[str, str]:
@@ -175,3 +207,41 @@ def process_design_order_with_ai(text: str, *, mock: bool = False) -> dict[str, 
         raise ValueError(msg)
 
     return json.loads(content)
+
+
+def process_product_card_with_ai(
+    name: str,
+    price: str,
+    *,
+    mock: bool = False,
+) -> dict[str, str]:
+    if mock:
+        return process_product_mock(name, price)
+
+    client = _create_client()
+    user_content = f"Название товара: {name}\nЦена: {price}"
+    response = client.chat.completions.create(
+        model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
+        messages=[
+            {"role": "system", "content": PRODUCT_CARD_SYSTEM_PROMPT},
+            {"role": "user", "content": user_content},
+        ],
+        response_format={
+            "type": "json_schema",
+            "json_schema": {
+                "name": "product_card",
+                "strict": True,
+                "schema": PRODUCT_CARD_SCHEMA,
+            },
+        },
+    )
+
+    content = response.choices[0].message.content
+    if not content:
+        msg = "Модель вернула пустой ответ"
+        raise ValueError(msg)
+
+    data = json.loads(content)
+    data["product_name"] = name
+    data["price"] = price
+    return data

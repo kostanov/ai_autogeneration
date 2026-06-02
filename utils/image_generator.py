@@ -16,7 +16,7 @@ IMAGE_MODEL = os.getenv("OPENAI_IMAGE_MODEL", "gpt-image-1-mini")
 VALID_QUALITIES = frozenset({"low", "medium", "high"})
 
 
-def generate_design_image(prompt: str, quality: str) -> Path:
+def generate_image(prompt: str, quality: str, *, prefix: str = "image") -> Path:
     if quality not in VALID_QUALITIES:
         msg = f"quality должен быть одним из: {', '.join(sorted(VALID_QUALITIES))}"
         raise ValueError(msg)
@@ -36,6 +36,10 @@ def generate_design_image(prompt: str, quality: str) -> Path:
 
     IMAGES_DIR.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M")
-    output_path = IMAGES_DIR / f"design_{timestamp}.png"
+    output_path = IMAGES_DIR / f"{prefix}_{timestamp}.png"
     output_path.write_bytes(base64.b64decode(response.data[0].b64_json))
     return output_path
+
+
+def generate_design_image(prompt: str, quality: str) -> Path:
+    return generate_image(prompt, quality, prefix="design")

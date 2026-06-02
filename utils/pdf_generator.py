@@ -11,11 +11,14 @@ REPORTS_DIR = PROJECT_ROOT / "reports"
 TEMPLATE_BY_TYPE = {
     "client": "report_template.html",
     "design": "design_report_template.html",
+    "product": "product_card_template.html",
 }
 PREFIX_BY_TYPE = {
     "client": "report",
     "design": "design_report",
+    "product": "product_card",
 }
+IMAGE_REPORT_TYPES = frozenset({"design", "product"})
 
 
 def generate_report_pdf(
@@ -37,7 +40,7 @@ def generate_report_pdf(
     template = env.get_template(TEMPLATE_BY_TYPE[report_type])
 
     context = dict(data)
-    if report_type == "design":
+    if report_type in IMAGE_REPORT_TYPES:
         context["image_uri"] = (
             image_path.resolve().as_uri() if image_path and image_path.exists() else ""
         )
