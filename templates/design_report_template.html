@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Отчёт по заказу дизайна — {{ project_name }}</title>
+  <style>
+    @page { size: A4; margin: 2cm; }
+    body {
+      font-family: "DejaVu Sans", sans-serif;
+      color: #1a1a2e;
+      line-height: 1.5;
+      font-size: 11pt;
+    }
+    header {
+      border-bottom: 3px solid #b45309;
+      padding-bottom: 12px;
+      margin-bottom: 24px;
+    }
+    h1 {
+      margin: 0 0 4px;
+      font-size: 22pt;
+      color: #b45309;
+    }
+    .meta { color: #64748b; font-size: 10pt; }
+    section {
+      margin-bottom: 20px;
+      page-break-inside: avoid;
+    }
+    h2 {
+      font-size: 12pt;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #b45309;
+      margin: 0 0 8px;
+      border-left: 4px solid #b45309;
+      padding-left: 10px;
+    }
+    .value {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 6px;
+      padding: 12px 14px;
+    }
+    .prompt {
+      font-size: 9pt;
+      color: #57534e;
+      font-style: italic;
+    }
+    .mockup {
+      text-align: center;
+      margin-top: 8px;
+    }
+    .mockup img {
+      max-width: 100%;
+      height: auto;
+      border: 1px solid #e7e5e4;
+      border-radius: 8px;
+    }
+    .mockup-placeholder {
+      background: #f5f5f4;
+      border: 2px dashed #d6d3d1;
+      border-radius: 8px;
+      padding: 40px 20px;
+      color: #78716c;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Отчёт по заказу дизайна сайта</h1>
+    <p class="meta">Сформирован автоматически · AI Client Report Generator</p>
+  </header>
+
+  <section>
+    <h2>Клиент</h2>
+    <div class="value">{{ client_name }}</div>
+  </section>
+
+  <section>
+    <h2>Проект</h2>
+    <div class="value">{{ project_name }}</div>
+  </section>
+
+  <section>
+    <h2>Тип бизнеса</h2>
+    <div class="value">{{ business_type }}</div>
+  </section>
+
+  <section>
+    <h2>Стиль и референсы</h2>
+    <div class="value">{{ style_preferences }}</div>
+  </section>
+
+  <section>
+    <h2>Требования к сайту</h2>
+    <div class="value">{{ key_requirements }}</div>
+  </section>
+
+  <section>
+    <h2>Бюджет и сроки</h2>
+    <div class="value">{{ budget_and_deadline }}</div>
+  </section>
+
+  <section>
+    <h2>Промпт для генерации макета</h2>
+    <div class="value prompt">{{ image_prompt }}</div>
+  </section>
+
+  <section>
+    <h2>Пример макета</h2>
+    <div class="mockup">
+      {% if image_uri %}
+      <img src="{{ image_uri }}" alt="Пример макета главной страницы">
+      {% else %}
+      <div class="mockup-placeholder">Изображение не сгенерировано (демо-режим)</div>
+      {% endif %}
+    </div>
+  </section>
+</body>
+</html>

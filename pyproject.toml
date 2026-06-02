@@ -1,0 +1,18 @@
+[project]
+name = "ai-client-report-generator"
+version = "0.1.0"
+description = "AI Client Report Generator — PDF-отчёты по диалогам с клиентами"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "flask>=3.1.3",
+    "jinja2>=3.1.6",
+    "openai>=2.40.0",
+    "python-dotenv>=1.2.2",
+    "weasyprint>=68.1",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.15",
+]

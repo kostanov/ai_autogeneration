@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Отчёт по диалогу — {{ client_name }}</title>
+  <style>
+    @page { size: A4; margin: 2cm; }
+    body {
+      font-family: "DejaVu Sans", sans-serif;
+      color: #1a1a2e;
+      line-height: 1.5;
+      font-size: 11pt;
+    }
+    header {
+      border-bottom: 3px solid #4361ee;
+      padding-bottom: 12px;
+      margin-bottom: 24px;
+    }
+    h1 {
+      margin: 0 0 4px;
+      font-size: 22pt;
+      color: #4361ee;
+    }
+    .meta { color: #64748b; font-size: 10pt; }
+    section {
+      margin-bottom: 20px;
+      page-break-inside: avoid;
+    }
+    h2 {
+      font-size: 12pt;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #4361ee;
+      margin: 0 0 8px;
+      border-left: 4px solid #4361ee;
+      padding-left: 10px;
+    }
+    .value {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 12px 14px;
+    }
+    .mood {
+      display: inline-block;
+      background: #e0e7ff;
+      color: #3730a3;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Отчёт по диалогу с клиентом</h1>
+    <p class="meta">Сформирован автоматически · AI Client Report Generator</p>
+  </header>
+
+  <section>
+    <h2>Клиент</h2>
+    <div class="value">{{ client_name }}</div>
+  </section>
+
+  <section>
+    <h2>Тема разговора</h2>
+    <div class="value">{{ topic }}</div>
+  </section>
+
+  <section>
+    <h2>Основной запрос</h2>
+    <div class="value">{{ main_request }}</div>
+  </section>
+
+  <section>
+    <h2>Настроение клиента</h2>
+    <p><span class="mood">{{ mood }}</span></p>
+  </section>
+
+  <section>
+    <h2>Следующие шаги</h2>
+    <div class="value">{{ next_steps }}</div>
+  </section>
+</body>
+</html>
