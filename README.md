@@ -5,20 +5,28 @@
 ## Структура
 
 ```
-├── main.py              # CLI: транскрибация → ИИ → PDF
-├── api.py               # опциональный Flask API
+├── main.py                    # CLI: три типа отчётов (client / design / product)
+├── api.py                     # Flask API (POST /api/report)
+├── justfile                   # команды just (text, image, product, run, api, lint…)
+├── pyproject.toml             # зависимости (uv)
 ├── templates/
-│   ├── report_template.html
-│   ├── design_report_template.html
-│   └── product_card_template.html
-├── reports/             # готовые PDF и images/
+│   ├── report_template.html       # отчёт по диалогу
+│   ├── design_report_template.html # заказ дизайна сайта
+│   └── product_card_template.html  # карточка товара
+├── reports/                   # готовые PDF (*.pdf)
+│   └── images/                # сгенерированные фоны (*.png)
 ├── utils/
-│   ├── ai_processor.py
-│   ├── image_generator.py
-│   └── pdf_generator.py
-├── samples/             # примеры транскрибаций
-├── .env                 # API-ключ (не в git)
-└── requirements.txt
+│   ├── ai_processor.py        # запросы к чат-модели (OPENAI_MODEL)
+│   ├── image_generator.py     # генерация изображений (gpt-image-1-mini)
+│   ├── pdf_generator.py       # HTML → PDF (WeasyPrint)
+│   ├── errors.py              # обработка ошибок API
+│   └── logging_config.py      # настройка логирования
+├── samples/
+│   ├── dialog_example.txt         # пример для client
+│   └── design_dialog_example.txt  # пример для design
+├── .env                       # ключи и настройки (не в git)
+├── .env.example
+└── requirements.txt           # список зависимостей (дубль pyproject)
 ```
 
 ## Установка
@@ -38,15 +46,22 @@ sudo dnf install cairo pango gdk-pixbuf2 libffi
 ## Запуск
 
 ```bash
-# отчёт по диалогу (client)
-just run -- -f samples/dialog_example.txt
+# отчёт по диалогу (client, type по умолчанию)
+just text
 
-# отчёт по заказу дизайна с генерацией макета (design)
-just run -- -t design -q medium -f samples/design_dialog_example.txt
+# отчёт по заказу дизайна с макетом (design)
+just image
+just image high          # quality: low | medium | high
 
 # карточка товара для маркетплейса (product)
-just run -- -t product --name "Наушники TWS Pro X" --price "4 990 ₽" -q medium
-just demo-product
+just product
+
+# произвольные аргументы CLI
+just run -- -f samples/dialog_example.txt
+just run -- -t design -q medium -f samples/design_dialog_example.txt
+just run -- -t product --name "Наушники" --price "4 990 ₽" -q medium
+just run -- -t product --name "..." --price "..." --mock   # без API
+just run -- -v --mock -f samples/dialog_example.txt        # подробные логи
 
 # HTTP API
 just api
@@ -59,11 +74,13 @@ just api
 
 | Команда | Описание |
 |---------|----------|
-| `just` | список команд |
-| `just run` | генерация (`-t client` / `design` / `product`, `-q` для картинки) |
-| `just demo-product` | демо карточки товара (без API) |
-| `just product` | карточка с API: `just product "Название" "1 990 ₽"` |
-| `just api` | Flask API |
-| `just lint` | проверка ruff |
-| `just fix` | автоисправление |
-| `just format` | форматирование |
+| `just` | список рецептов |
+| `just run -- …` | запуск `main.py` с любыми аргументами (`-t`, `-f`, `--name`, `--price`, `-q`, `--mock`, `-v`) |
+| `just text` | отчёт **client** из `samples/dialog_example.txt` |
+| `just image` | отчёт **design** из `samples/design_dialog_example.txt` (quality по умолчанию `medium`) |
+| `just image high` | то же с `quality=high` |
+| `just product` | карточка **product** (наушники, 4 990 ₽) |
+| `just api` | Flask API на порту 5000 |
+| `just lint` | `ruff check` |
+| `just fix` | `ruff check --fix` |
+| `just format` | `ruff format` |
