@@ -1,10 +1,16 @@
 import json
 import os
+from typing import Any
 
 from dotenv import load_dotenv
 from openai import OpenAI
 
+from utils.errors import OPENAI_CLIENT_ERRORS, log_and_reraise
+from utils.logging_config import get_logger
+
 load_dotenv()
+
+logger = get_logger(__name__)
 
 REPORT_SCHEMA = {
     "type": "object",
@@ -100,6 +106,62 @@ def _create_client() -> OpenAI:
     return OpenAI(**kwargs)
 
 
+def _parse_json_response(content: str, stage: str) -> dict[str, str]:
+    try:
+        return json.loads(content)
+    except json.JSONDecodeError as exc:
+        logger.error("Невалидный JSON на этапе «%s»: %s", stage, content[:200])
+        msg = "Модель вернула невалидный JSON"
+        raise ValueError(msg) from exc
+
+
+def _chat_json_completion(
+    *,
+    stage: str,
+    system_prompt: str,
+    user_content: str,
+    schema_name: str,
+    schema: dict[str, Any],
+    mock: bool,
+    mock_result: dict[str, str],
+) -> dict[str, str]:
+    if mock:
+        logger.info("Этап «%s»: демо-режим (без API)", stage)
+        return mock_result
+
+    model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+    logger.info("Этап «%s»: запрос к чат-модели %s", stage, model)
+
+    try:
+        client = _create_client()
+        response = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_content},
+            ],
+            response_format={
+                "type": "json_schema",
+                "json_schema": {
+                    "name": schema_name,
+                    "strict": True,
+                    "schema": schema,
+                },
+            },
+        )
+    except OPENAI_CLIENT_ERRORS as exc:
+        log_and_reraise(stage, exc)
+
+    content = response.choices[0].message.content
+    if not content:
+        logger.error("Этап «%s»: пустой ответ модели", stage)
+        msg = "Модель вернула пустой ответ"
+        raise ValueError(msg)
+
+    logger.info("Этап «%s»: ответ получен (%d символов)", stage, len(content))
+    return _parse_json_response(content, stage)
+
+
 def process_product_mock(name: str, price: str) -> dict[str, str]:
     return {
         "product_name": name,
@@ -152,61 +214,27 @@ def process_dialog_mock(_text: str) -> dict[str, str]:
 
 
 def process_dialog_with_ai(text: str, *, mock: bool = False) -> dict[str, str]:
-    if mock:
-        return process_dialog_mock(text)
-
-    client = _create_client()
-    response = client.chat.completions.create(
-        model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": text},
-        ],
-        response_format={
-            "type": "json_schema",
-            "json_schema": {
-                "name": "client_report",
-                "strict": True,
-                "schema": REPORT_SCHEMA,
-            },
-        },
+    return _chat_json_completion(
+        stage="анализ диалога",
+        system_prompt=SYSTEM_PROMPT,
+        user_content=text,
+        schema_name="client_report",
+        schema=REPORT_SCHEMA,
+        mock=mock,
+        mock_result=process_dialog_mock(text),
     )
-
-    content = response.choices[0].message.content
-    if not content:
-        msg = "Модель вернула пустой ответ"
-        raise ValueError(msg)
-
-    return json.loads(content)
 
 
 def process_design_order_with_ai(text: str, *, mock: bool = False) -> dict[str, str]:
-    if mock:
-        return process_design_mock(text)
-
-    client = _create_client()
-    response = client.chat.completions.create(
-        model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
-        messages=[
-            {"role": "system", "content": DESIGN_SYSTEM_PROMPT},
-            {"role": "user", "content": text},
-        ],
-        response_format={
-            "type": "json_schema",
-            "json_schema": {
-                "name": "design_report",
-                "strict": True,
-                "schema": DESIGN_REPORT_SCHEMA,
-            },
-        },
+    return _chat_json_completion(
+        stage="анализ заказа дизайна",
+        system_prompt=DESIGN_SYSTEM_PROMPT,
+        user_content=text,
+        schema_name="design_report",
+        schema=DESIGN_REPORT_SCHEMA,
+        mock=mock,
+        mock_result=process_design_mock(text),
     )
-
-    content = response.choices[0].message.content
-    if not content:
-        msg = "Модель вернула пустой ответ"
-        raise ValueError(msg)
-
-    return json.loads(content)
 
 
 def process_product_card_with_ai(
@@ -215,33 +243,16 @@ def process_product_card_with_ai(
     *,
     mock: bool = False,
 ) -> dict[str, str]:
-    if mock:
-        return process_product_mock(name, price)
-
-    client = _create_client()
     user_content = f"Название товара: {name}\nЦена: {price}"
-    response = client.chat.completions.create(
-        model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
-        messages=[
-            {"role": "system", "content": PRODUCT_CARD_SYSTEM_PROMPT},
-            {"role": "user", "content": user_content},
-        ],
-        response_format={
-            "type": "json_schema",
-            "json_schema": {
-                "name": "product_card",
-                "strict": True,
-                "schema": PRODUCT_CARD_SCHEMA,
-            },
-        },
+    data = _chat_json_completion(
+        stage="карточка товара",
+        system_prompt=PRODUCT_CARD_SYSTEM_PROMPT,
+        user_content=user_content,
+        schema_name="product_card",
+        schema=PRODUCT_CARD_SCHEMA,
+        mock=mock,
+        mock_result=process_product_mock(name, price),
     )
-
-    content = response.choices[0].message.content
-    if not content:
-        msg = "Модель вернула пустой ответ"
-        raise ValueError(msg)
-
-    data = json.loads(content)
     data["product_name"] = name
     data["price"] = price
     return data
